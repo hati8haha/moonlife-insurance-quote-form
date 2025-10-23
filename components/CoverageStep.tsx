@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { type FormData, PlanType } from '../types';
 import { 
   trackStepView, 
@@ -16,10 +16,30 @@ interface CoverageStepProps {
 }
 
 const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextStep, prevStep }) => {
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Track step view on mount
   useEffect(() => {
     trackStepView(2, 'coverage');
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced coverage tracking with proper cleanup
+  const debouncedTrackCoverage = useCallback((amount: number) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      trackCoverageAmountChange(amount);
+    }, 500);
   }, []);
 
   const formatCurrency = (amount: number) => {
@@ -38,7 +58,7 @@ const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextSte
 
   const handleCoverageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e);
-    trackCoverageAmountChange(Number(e.target.value));
+    debouncedTrackCoverage(Number(e.target.value));
   };
 
   const handleNextClick = () => {

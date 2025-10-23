@@ -34,11 +34,12 @@ export const trackButtonClick = (buttonName: string, context?: Record<string, an
   trackEvent(`${buttonName}-clicked`, context);
 };
 
-// Track field interactions
+// Track field interactions (called on blur, not on every keystroke)
 export const trackFieldInteraction = (fieldName: string, value?: any): void => {
-  trackEvent(`field-${fieldName}-filled`, { 
+  trackEvent(`field-${fieldName}-completed`, { 
     fieldName,
-    hasValue: !!value 
+    hasValue: !!value,
+    valueLength: typeof value === 'string' ? value.length : undefined
   });
 };
 
@@ -98,6 +99,18 @@ const getCoverageRange = (amount: number): string => {
   if (amount < 250000) return 'medium';
   if (amount < 500000) return 'high';
   return 'very-high';
+};
+
+// Simple debounce utility
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
 };
 
 // Track navigation

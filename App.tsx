@@ -27,11 +27,13 @@ const App: React.FC = () => {
 
   const totalSteps = 3; // Excluding success step
 
-  // Track session start on mount
+  // Track session start on mount (only once)
   useEffect(() => {
     trackSessionStart();
-    
-    // Track form abandonment when user leaves the page
+  }, []); // Empty dependency array - runs only once on mount
+
+  // Track form abandonment when user leaves the page
+  useEffect(() => {
     const handleBeforeUnload = () => {
       if (currentStep < 4) {
         trackFormAbandonment(currentStep, formData);
@@ -44,7 +46,7 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [currentStep, formData]);
+  }, [currentStep, formData]); // These dependencies are needed for abandonment tracking
 
   const handleNextStep = useCallback(() => {
     const nextStep = Math.min(currentStep + 1, totalSteps + 1);
