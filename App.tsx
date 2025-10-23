@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { type FormData, PlanType } from './types';
 import PersonalInfoStep from './components/PersonalInfoStep';
 import CoverageStep from './components/CoverageStep';
@@ -7,6 +7,12 @@ import ReviewStep from './components/ReviewStep';
 import SuccessStep from './components/SuccessStep';
 import ProgressBar from './components/ProgressBar';
 import { MoonIcon } from './components/Icons';
+import { 
+  trackSessionStart, 
+  trackFormAbandonment, 
+  trackNavigation, 
+  trackSessionEnd 
+} from './utils/tracking';
 
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -21,15 +27,39 @@ const App: React.FC = () => {
 
   const totalSteps = 3; // Excluding success step
 
+  // Track session start on mount
+  useEffect(() => {
+    trackSessionStart();
+    
+    // Track form abandonment when user leaves the page
+    const handleBeforeUnload = () => {
+      if (currentStep < 4) {
+        trackFormAbandonment(currentStep, formData);
+        trackSessionEnd(false);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentStep, formData]);
+
   const handleNextStep = useCallback(() => {
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps + 1));
-  }, [totalSteps]);
+    const nextStep = Math.min(currentStep + 1, totalSteps + 1);
+    trackNavigation(currentStep, nextStep, 'next');
+    setCurrentStep(nextStep);
+  }, [currentStep, totalSteps]);
 
   const handlePrevStep = useCallback(() => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-  }, []);
+    const prevStep = Math.max(currentStep - 1, 1);
+    trackNavigation(currentStep, prevStep, 'back');
+    setCurrentStep(prevStep);
+  }, [currentStep]);
   
   const handleRestart = useCallback(() => {
+    trackSessionEnd(true);
     setFormData({
         firstName: '',
         lastName: '',
@@ -39,6 +69,7 @@ const App: React.FC = () => {
         coverageAmount: 50000,
     });
     setCurrentStep(1);
+    trackSessionStart();
   }, []);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

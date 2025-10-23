@@ -1,6 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { type FormData } from '../types';
+import { 
+  trackStepView, 
+  trackFieldInteraction, 
+  trackValidationError, 
+  trackButtonClick 
+} from '../utils/tracking';
 
 interface PersonalInfoStepProps {
   data: FormData;
@@ -10,6 +16,11 @@ interface PersonalInfoStepProps {
 
 const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, handleChange, nextStep }) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Track step view on mount
+  useEffect(() => {
+    trackStepView(1, 'personal-info');
+  }, []);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -23,13 +34,25 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, handleChange,
     if (!data.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required.';
     
     setErrors(newErrors);
+    
+    // Track validation errors
+    if (Object.keys(newErrors).length > 0) {
+      trackValidationError('personal-info', newErrors);
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
+    trackButtonClick('personal-info-next', { step: 1 });
     if (validate()) {
       nextStep();
     }
+  };
+
+  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange(e);
+    trackFieldInteraction(e.target.name, e.target.value);
   };
   
   return (
@@ -44,7 +67,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, handleChange,
             name="firstName"
             id="firstName"
             value={data.firstName}
-            onChange={handleChange}
+            onChange={handleFieldChange}
             placeholder="e.g., Neil"
             className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${errors.firstName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'}`}
           />
@@ -57,7 +80,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, handleChange,
             name="lastName"
             id="lastName"
             value={data.lastName}
-            onChange={handleChange}
+            onChange={handleFieldChange}
             placeholder="e.g., Armstrong"
             className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${errors.lastName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'}`}
           />
@@ -70,7 +93,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, handleChange,
             name="email"
             id="email"
             value={data.email}
-            onChange={handleChange}
+            onChange={handleFieldChange}
             placeholder="you@example.com"
             className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'}`}
           />
@@ -83,7 +106,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, handleChange,
             name="dateOfBirth"
             id="dateOfBirth"
             value={data.dateOfBirth}
-            onChange={handleChange}
+            onChange={handleFieldChange}
             className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${errors.dateOfBirth ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'}`}
           />
           {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}

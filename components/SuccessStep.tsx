@@ -1,12 +1,24 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircleIcon } from './Icons';
+import { trackStepView, trackButtonClick } from '../utils/tracking';
 
 interface SuccessStepProps {
     onRestart: () => void;
 }
 
 const SuccessStep: React.FC<SuccessStepProps> = ({ onRestart }) => {
+  
+  // Track success view on mount
+  useEffect(() => {
+    trackStepView(4, 'success');
+  }, []);
+
+  const handleRestart = () => {
+    trackButtonClick('success-restart', { step: 4 });
+    onRestart();
+  };
+
   return (
     <div className="text-center py-8">
       <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -15,7 +27,7 @@ const SuccessStep: React.FC<SuccessStepProps> = ({ onRestart }) => {
         Thank you! One of our MoonLife specialists will review your information and get back to you within 2 business days.
       </p>
       <button
-        onClick={onRestart}
+        onClick={handleRestart}
         className="px-8 py-3 bg-primary-600 text-white font-semibold rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
       >
         Get Another Quote

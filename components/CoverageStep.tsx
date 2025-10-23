@@ -1,6 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { type FormData, PlanType } from '../types';
+import { 
+  trackStepView, 
+  trackPlanSelection, 
+  trackCoverageAmountChange, 
+  trackButtonClick 
+} from '../utils/tracking';
 
 interface CoverageStepProps {
   data: FormData;
@@ -11,6 +17,11 @@ interface CoverageStepProps {
 
 const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextStep, prevStep }) => {
 
+  // Track step view on mount
+  useEffect(() => {
+    trackStepView(2, 'coverage');
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -18,6 +29,30 @@ const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextSte
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handlePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    handleChange(e);
+    trackPlanSelection(e.target.value);
+  };
+
+  const handleCoverageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange(e);
+    trackCoverageAmountChange(Number(e.target.value));
+  };
+
+  const handleNextClick = () => {
+    trackButtonClick('coverage-next', { 
+      step: 2,
+      planType: data.planType,
+      coverageAmount: data.coverageAmount
+    });
+    nextStep();
+  };
+
+  const handleBackClick = () => {
+    trackButtonClick('coverage-back', { step: 2 });
+    prevStep();
   };
     
   return (
@@ -32,7 +67,7 @@ const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextSte
             name="planType"
             id="planType"
             value={data.planType}
-            onChange={handleChange}
+            onChange={handlePlanChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500"
           >
             {Object.values(PlanType).map((plan) => (
@@ -53,7 +88,7 @@ const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextSte
             max="1000000"
             step="10000"
             value={data.coverageAmount}
-            onChange={handleChange}
+            onChange={handleCoverageChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
           />
            <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -65,13 +100,13 @@ const CoverageStep: React.FC<CoverageStepProps> = ({ data, handleChange, nextSte
       
       <div className="mt-8 flex justify-between">
         <button
-          onClick={prevStep}
+          onClick={handleBackClick}
           className="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
         >
           Back
         </button>
         <button
-          onClick={nextStep}
+          onClick={handleNextClick}
           className="px-6 py-2 bg-primary-600 text-white font-semibold rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
         >
           Next

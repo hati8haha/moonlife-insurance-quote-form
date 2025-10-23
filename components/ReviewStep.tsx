@@ -1,6 +1,11 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { type FormData } from '../types';
+import { 
+  trackStepView, 
+  trackButtonClick, 
+  trackFormSubmission 
+} from '../utils/tracking';
 
 interface ReviewStepProps {
   data: FormData;
@@ -17,11 +22,31 @@ const ReviewItem: React.FC<{ label: string; value: string | number }> = ({ label
 
 const ReviewStep: React.FC<ReviewStepProps> = ({ data, nextStep, prevStep }) => {
     
+  // Track step view on mount
+  useEffect(() => {
+    trackStepView(3, 'review');
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
+  };
+
+  const handleSubmit = () => {
+    trackButtonClick('review-submit', { 
+      step: 3,
+      planType: data.planType,
+      coverageAmount: data.coverageAmount
+    });
+    trackFormSubmission(data);
+    nextStep();
+  };
+
+  const handleBackClick = () => {
+    trackButtonClick('review-back', { step: 3 });
+    prevStep();
   };
     
   return (
@@ -40,13 +65,13 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ data, nextStep, prevStep }) => 
       
       <div className="mt-8 flex justify-between">
         <button
-          onClick={prevStep}
+          onClick={handleBackClick}
           className="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
         >
           Back
         </button>
         <button
-          onClick={nextStep}
+          onClick={handleSubmit}
           className="px-6 py-2 bg-primary-600 text-white font-semibold rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
         >
           Submit Quote
