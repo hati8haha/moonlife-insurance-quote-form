@@ -1,0 +1,5 @@
+{
+  "name": "MoonLife Insurance Quote Form",
+  "description": "A modern, multi-step form to get an insurance quote from MoonLife. This is a frontend demonstration showcasing a clean UI/UX for collecting user information progressively.",
+  "requestFramePermissions": []
+}
